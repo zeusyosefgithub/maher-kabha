@@ -1,5 +1,5 @@
 'use client';
-import { Autocomplete, AutocompleteItem, Button, Card, CardBody, Divider, Input, Switch } from "@nextui-org/react";
+import { Autocomplete, AutocompleteItem, Button, Card, CardBody, Divider, Input, Spinner, Switch } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { FaClipboardList, FaPlus, FaProjectDiagram, FaUserAlt, FaWhatsapp } from "react-icons/fa";
@@ -16,6 +16,7 @@ import { firestore } from "../FireBase/firebase";
 
 
 export default function aedara() {
+
     const [type, setType] = useState('السائقين');
     const [loading, setLoading] = useState(false);
     const [showAddDriver, setShowAddDriver] = useState(false);
@@ -24,10 +25,9 @@ export default function aedara() {
     const Roads = GetDocs('Roads');
     const Aedara = GetDocs('Aedara');
     const metadata = GetDocs('metadata');
-
+    const [aedara, setAedara] = useState([]);
+    const [resData, setResData] = useState(false);
     const counterAedara = metadata.find((count) => count.id === 'aedara');
-
-
     const [driver, setDriver] = useState(null);
 
     const sendWhatsAppMessage = (phoneNumber, message) => {
@@ -35,7 +35,6 @@ export default function aedara() {
         const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
         window.open(whatsappUrl, '_blank');
     };
-
     const GetDriversInfo = (val) => {
         for (let index = 0; index < Drivers.length; index++) {
             if (Drivers[index].name === val) {
@@ -44,12 +43,7 @@ export default function aedara() {
         }
         return false;
     }
-
-    const [aedara, setAedara] = useState([]);
-    const [resData, setResData] = useState(false);
-
     useEffect(() => {
-        let newArray = [];
         if (!resData) {
             const unsubscribe = useGetDataByConditionWithoutUseEffect(
                 'Aedara',
@@ -58,19 +52,29 @@ export default function aedara() {
                 format(new Date(), 'dd-MM-yyyy'),
                 result => {
                     if (result.length) {
-                        newArray.push(...result);
-                        setAedara(newArray);
+                        setAedara(result);
                         setResData(true);
                     }
                 }
             );
         }
     }, [Roads]);
-
-
-
+    console.log(Aedara);
+    useEffect(() => {
+        if(!Aedara.length){
+            let newArray = [];
+            for (let index = 0; index < Roads.length; index++) {
+                newArray.push({
+                    ...Roads[index],
+                    dialyOrders: 0,
+                    driverName: '',
+                    twkel: false,
+                })
+            }
+            setAedara(newArray);
+        }
+    },[Aedara])
     const onValueChange = (index, field, value) => {
-        console.log(value);
         setAedara((prevAedara) => {
             const updatedArray = [...prevAedara];
             updatedArray[index] = {
@@ -80,7 +84,6 @@ export default function aedara() {
             return updatedArray;
         });
     };
-
     const onValueChangeE = (outerIndex, innerIndex, field, value) => {
         setAedara((prevState) => {
           const updatedAedara = [...prevState];
@@ -88,25 +91,15 @@ export default function aedara() {
             ...updatedAedara[outerIndex].aedartAlkhtot[innerIndex],
             [field]: value,
           };
-          return updatedAedara;
-        });
-    };
-
-    const removeOuterIndex = (outerIndex) => {
-        setAedara((prevState) => {
-            const updatedAedara = prevState.filter((_, index) => index !== outerIndex);
             return updatedAedara;
         });
     };
-
-    console.log(aedara);
-
-
-
-
-
-
-
+    const keepOnlyLastIndex = () => {
+        setAedara((prevState) => {
+            const updatedAedara = prevState.slice(-1);
+            return updatedAedara;
+        });
+    };
     return (
         <div dir='rtl'>
             <div className='p-10'>
@@ -133,6 +126,7 @@ export default function aedara() {
                                             </thead>
                                             <tbody>
                                                 {
+                                                    aedara.length ?
                                                     resData ?
                                                         aedara?.map((road, outerIndex) => {
                                                             return road?.aedartAlkhtot?.map((road, innerIndex) => {
@@ -191,6 +185,9 @@ export default function aedara() {
                                                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
                                                             </tr>
                                                         })
+                                                        :
+                                                        <Spinner className="absolute left-0 bottom-0 top-0 right-0"/>
+
                                                 }
                                             </tbody>
                                         </table>
@@ -206,6 +203,8 @@ export default function aedara() {
                                 await updateDoc(doc(firestore,'Aedara',aedara[0]?.id),{
                                     aedartAlkhtot : aedara[0].aedartAlkhtot
                                 });
+                                keepOnlyLastIndex();
+
                             }
                             else{
                                 await addDoc(collection(firestore, 'Aedara'), {

@@ -8,6 +8,7 @@ import { FcManager } from "react-icons/fc";
 import AddDriver from "../Modals/AddDriver";
 import GetDocs from "../FireBase/getDocs";
 import AddRoad from "../Modals/AddRoad";
+import AddTajer from "../Modals/AddTajer";
 
 
 export default function beanat() {
@@ -15,9 +16,12 @@ export default function beanat() {
     const [loading, setLoading] = useState(false);
     const [showAddDriver, setShowAddDriver] = useState(false);
     const [showAddRoad, setShowAddRoad] = useState(false);
+    const [showAddTajer, setShowAddTajer] = useState(false);
     const Drivers = GetDocs('Drivers');
     const Roads = GetDocs('Roads');
     const metadata = GetDocs('metadata');
+    const Tojar = GetDocs('Tojar');
+    
 
 
 
@@ -26,7 +30,8 @@ export default function beanat() {
         <div dir='rtl'>
             <AddDriver metadata={metadata} Drivers={Drivers} show={showAddDriver} disable={() => setShowAddDriver(false)} />
             <AddRoad Roads={Roads} metadata={metadata} Drivers={Drivers} show={showAddRoad} disable={() => setShowAddRoad(false)} />
-            <div className='p-10'>
+            <AddTajer Tojar={Tojar} Roads={Roads} metadata={metadata} Drivers={Drivers} show={showAddTajer} disable={() => setShowAddTajer(false)}/>
+            <div className='pr-10 pl-10'>
                 <div className='h-[600px]'>
                     <div className='h-full'>
                         <div className='w-full flex h-full p-5'>
@@ -39,6 +44,12 @@ export default function beanat() {
                                                 <div className='w-full text-right'>السائقين</div>
                                             </Button>
                                         </div>
+                                        <div className="h-full flex items-center flex-wrap w-full justify-center">
+                                            <Button variant='flat' color={type === 'التجار' ? 'primary' : 'default'} className='w-full' onClick={() => setType('التجار')}>
+                                                <FcManager className='text-xl w-full text-right' />
+                                                <div className='w-full text-right'>التجار</div>
+                                            </Button>
+                                        </div>
                                         <div className="h-full flex items-center flex-wrap w-full justify-center border-b-1">
                                             <Button variant='flat' color={type === 'الخطوط' ? 'primary' : 'default'} className='w-full' onClick={() => setType('الخطوط')}>
                                                 <FaProjectDiagram className='text-xl w-full text-right' />
@@ -49,12 +60,6 @@ export default function beanat() {
                                             <Button variant='flat' color={type === 'التقارير المالية' ? 'primary' : 'default'} className='w-full' onClick={() => setType('التقارير المالية')}>
                                                 <FaClipboardList className='text-xl w-full text-right' />
                                                 <div className='w-full text-right'>التقارير المالية</div>
-                                            </Button>
-                                        </div>
-                                        <div className="h-full flex items-center flex-wrap w-full justify-center">
-                                            <Button variant='flat' color={type === 'التجار' ? 'primary' : 'default'} className='w-full' onClick={() => setType('التجار')}>
-                                                <FcManager className='text-xl w-full text-right' />
-                                                <div className='w-full text-right'>التجار</div>
                                             </Button>
                                         </div>
                                     </CardBody>
@@ -77,7 +82,7 @@ export default function beanat() {
                                                 {
                                                     type === 'التجار' && <FcManager className='text-xl ml-2' />
                                                 }
-                                                <div className='text-xl'>{type}</div>
+                                                <div className='text-xl w-[200px] text-right'>{type}</div>
                                             </div>
                                             <div className='w-full'>
                                                 {
@@ -99,7 +104,7 @@ export default function beanat() {
                                                     </Button>
                                                 }
                                                 {
-                                                    type === 'التجار' && <Button size="sm" color="primary" variant="flat" onClick={() => setShowAddDriver(true)}>
+                                                    type === 'التجار' && <Button size="sm" color="primary" variant="flat" onClick={() => setShowAddTajer(true)}>
                                                         <div>اضافة</div>
                                                         <FaPlus />
                                                     </Button>
@@ -120,12 +125,38 @@ export default function beanat() {
                                                     </thead>
                                                     <tbody>
                                                         {
-                                                            Drivers.map((driver, index) => {
+                                                            Drivers?.map((driver, index) => {
                                                                 return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"></td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{driver.name}</td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{driver.number}</td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{driver.AvgOrders}</td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowModalCreate(true); setTfaolAgla(agla); setMsbarDrag(agla.msbarAgla); setMsbarLkoh(agla.msbarLkoh); }}>دخول</Button></td>
+                                                                </tr>
+                                                            })
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+                                        {
+                                            type === 'التجار' && <div>
+                                                <table className="w-full table-auto border-collapse">
+                                                    <thead>
+                                                        <tr className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
+                                                            <th className="px-4 py-2 text-center  font-extrabold text-black text-xs"></th>
+                                                            <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">اسم التاجر</th>
+                                                            <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">رقم التاجر</th>
+                                                            <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">تفصيل</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {
+                                                            Tojar?.map((item, index) => {
+                                                                return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.name}</td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.number}</td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowModalCreate(true); setTfaolAgla(agla); setMsbarDrag(agla.msbarAgla); setMsbarLkoh(agla.msbarLkoh); }}>دخول</Button></td>
                                                                 </tr>
                                                             })
@@ -151,7 +182,7 @@ export default function beanat() {
                                                     </thead>
                                                     <tbody>
                                                         {
-                                                            Roads.map((road, index) => {
+                                                            Roads?.map((road, index) => {
                                                                 return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"></td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.name}</td>

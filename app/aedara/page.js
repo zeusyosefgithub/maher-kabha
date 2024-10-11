@@ -55,25 +55,22 @@ export default function aedara() {
                         setAedara(result);
                         setResData(true);
                     }
+                    else{
+                        let newArray = [];
+                        for (let index = 0; index < Roads.length; index++) {
+                            newArray.push({
+                                ...Roads[index],
+                                dialyOrders: 0,
+                                driverName: '',
+                                twkel: false,
+                            })
+                        }
+                        setAedara(newArray);
+                    }
                 }
             );
         }
     }, [Roads]);
-    console.log(Aedara);
-    useEffect(() => {
-        if(!Aedara.length){
-            let newArray = [];
-            for (let index = 0; index < Roads.length; index++) {
-                newArray.push({
-                    ...Roads[index],
-                    dialyOrders: 0,
-                    driverName: '',
-                    twkel: false,
-                })
-            }
-            setAedara(newArray);
-        }
-    },[Aedara])
     const onValueChange = (index, field, value) => {
         setAedara((prevAedara) => {
             const updatedArray = [...prevAedara];
@@ -86,11 +83,11 @@ export default function aedara() {
     };
     const onValueChangeE = (outerIndex, innerIndex, field, value) => {
         setAedara((prevState) => {
-          const updatedAedara = [...prevState];
-          updatedAedara[outerIndex].aedartAlkhtot[innerIndex] = {
-            ...updatedAedara[outerIndex].aedartAlkhtot[innerIndex],
-            [field]: value,
-          };
+            const updatedAedara = [...prevState];
+            updatedAedara[outerIndex].aedartAlkhtot[innerIndex] = {
+                ...updatedAedara[outerIndex].aedartAlkhtot[innerIndex],
+                [field]: value,
+            };
             return updatedAedara;
         });
     };
@@ -100,9 +97,20 @@ export default function aedara() {
             return updatedAedara;
         });
     };
+
+    const CheckDriverRoads = (driver,road) => {
+        for (let index = 0; index < aedara.length; index++) {
+            if(driver.name === aedara[index].driverName && aedara[index].orderPrice != road.orderPrice){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    console.log(aedara);
     return (
         <div dir='rtl'>
-            <div className='p-10'>
+            <div className='pr-10 pl-10'>
                 <div className='h-[600px] flex flex-col'>
                     <div className='h-full'>
                         <div className='w-full flex h-full p-5'>
@@ -126,39 +134,38 @@ export default function aedara() {
                                             </thead>
                                             <tbody>
                                                 {
-                                                    aedara.length ?
                                                     resData ?
                                                         aedara?.map((road, outerIndex) => {
                                                             return road?.aedartAlkhtot?.map((road, innerIndex) => {
                                                                 return <tr key={innerIndex} className="border-b border-gray-200 dark:border-gray-700">
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.name}</td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={road?.dialyOrders || ''} onValueChange={(value) => onValueChangeE(outerIndex,innerIndex, 'dialyOrders', value)} color='primary' className="max-w-[150px]" label='' /></div></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Autocomplete
-                                                                    className="max-w-[150px]"
-                                                                    color="primary"
-                                                                    size="xs"
-                                                                    defaultInputValue={road.driver}
-                                                                    defaultItems={Drivers}
-                                                                    onSelectionChange={(value) => onValueChangeE(outerIndex,innerIndex, 'driverName', value)}
-                                                                    onInputChange={(value) => onValueChangeE(outerIndex,innerIndex, 'driverName', value)}
-                                                                >
-                                                                    {
-                                                                        Drivers?.map((driver, index) => (
-                                                                            <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
-                                                                                {driver?.name}
-                                                                            </AutocompleteItem>
-                                                                        ))
-                                                                    }
-                                                                </Autocomplete></div></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Switch isSelected={road.twkel} value={road.twkel} onValueChange={(value) => onValueChangeE(outerIndex,innerIndex, 'twkel', value)}></Switch></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
-                                                            </tr>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.name}</td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={road?.dialyOrders || ''} onValueChange={(value) => onValueChangeE(outerIndex, innerIndex, 'dialyOrders', value)} color='primary' className="max-w-[150px]" label='' /></div></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Autocomplete
+                                                                        className="max-w-[150px]"
+                                                                        color="primary"
+                                                                        size="xs"
+                                                                        defaultInputValue={road.driverName}
+                                                                        defaultItems={Drivers}
+                                                                        onSelectionChange={(value) => onValueChangeE(outerIndex, innerIndex, 'driverName', value)}
+                                                                        onInputChange={(value) => onValueChangeE(outerIndex, innerIndex, 'driverName', value)}
+                                                                    >
+                                                                        {
+                                                                            Drivers?.map((driver, index) => (
+                                                                                <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
+                                                                                    {driver?.name}
+                                                                                </AutocompleteItem>
+                                                                            ))
+                                                                        }
+                                                                    </Autocomplete></div></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Switch isSelected={road.twkel} value={road.twkel} onValueChange={(value) => onValueChangeE(outerIndex, innerIndex, 'twkel', value)}></Switch></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
+                                                                </tr>
                                                             })
                                                         })
                                                         :
-                                                        aedara.map((road, index) => {
+                                                        aedara?.map((road, index) => {
                                                             return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
                                                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.name}</td>
                                                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
@@ -167,14 +174,14 @@ export default function aedara() {
                                                                     className="max-w-[150px]"
                                                                     color="primary"
                                                                     size="xs"
-                                                                    
+
                                                                     defaultItems={Drivers}
                                                                     onSelectionChange={(value) => onValueChange(index, 'driverName', value)}
                                                                     onInputChange={(value) => onValueChange(index, 'driverName', value)}
                                                                 >
                                                                     {
                                                                         Drivers?.map((driver, index) => (
-                                                                            <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
+                                                                            CheckDriverRoads(driver,road) && <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
                                                                                 {driver?.name}
                                                                             </AutocompleteItem>
                                                                         ))
@@ -185,8 +192,6 @@ export default function aedara() {
                                                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
                                                             </tr>
                                                         })
-                                                        :
-                                                        <Spinner className="absolute left-0 bottom-0 top-0 right-0"/>
 
                                                 }
                                             </tbody>
@@ -197,16 +202,16 @@ export default function aedara() {
                         </div>
                     </div>
                     <div className="mr-10">
-                        <Button isLoading={loading} onClick={async() => {
+                        <Button isLoading={loading} onClick={async () => {
                             setLoading(true);
-                            if(resData){
-                                await updateDoc(doc(firestore,'Aedara',aedara[0]?.id),{
-                                    aedartAlkhtot : aedara[0].aedartAlkhtot
+                            if (resData) {
+                                await updateDoc(doc(firestore, 'Aedara', aedara[0]?.id), {
+                                    aedartAlkhtot: aedara[0].aedartAlkhtot
                                 });
                                 keepOnlyLastIndex();
 
                             }
-                            else{
+                            else {
                                 await addDoc(collection(firestore, 'Aedara'), {
                                     idnum: counterAedara.count,
                                     date: format(new Date(), 'dd-MM-yyyy'),

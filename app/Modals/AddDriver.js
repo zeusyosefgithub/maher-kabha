@@ -6,7 +6,7 @@ import { FaRegCheckSquare } from "react-icons/fa";
 import { firestore } from "../FireBase/firebase";
 import GetDocs from "../FireBase/getDocs";
 
-export default function AddDriver({ show, disable, Drivers,metadata }) {
+export default function AddDriver({ show, disable, Drivers,metadata,showMessage }) {
 
     const [loading, setLoading] = useState(false);
 
@@ -31,6 +31,7 @@ export default function AddDriver({ show, disable, Drivers,metadata }) {
         setName('');
         setNumber('');
         disable();
+        showMessage();
     }
 
     const checkDriverInputs = () => {

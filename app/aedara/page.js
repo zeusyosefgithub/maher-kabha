@@ -2,7 +2,7 @@
 import { Autocomplete, AutocompleteItem, Button, Card, CardBody, Divider, Input, Spinner, Switch } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { FaClipboardList, FaPlus, FaProjectDiagram, FaUserAlt, FaWhatsapp } from "react-icons/fa";
+import { FaClipboardList, FaPlus, FaProjectDiagram, FaSave, FaUserAlt, FaWhatsapp } from "react-icons/fa";
 import { MdReport } from "react-icons/md";
 import { FcManager } from "react-icons/fc";
 import AddDriver from "../Modals/AddDriver";
@@ -13,6 +13,7 @@ import { ar } from 'date-fns/locale';
 import { useGetDataByConditionWithoutUseEffect, useGetDataByConditionWithoutUseEffectTwoQueres } from "../FireBase/getDataByCondition";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import { firestore } from "../FireBase/firebase";
+import { Alert } from "@mui/material";
 
 
 export default function aedara() {
@@ -25,10 +26,11 @@ export default function aedara() {
     const Roads = GetDocs('Roads');
     const Aedara = GetDocs('Aedara');
     const metadata = GetDocs('metadata');
+    const [aedaraID, setAedaraID] = useState('');
     const [aedara, setAedara] = useState([]);
     const [resData, setResData] = useState(false);
     const counterAedara = metadata.find((count) => count.id === 'aedara');
-    const [driver, setDriver] = useState(null);
+    const [showAlert, setShowAlert] = useState(false);
 
     const sendWhatsAppMessage = (phoneNumber, message) => {
         const encodedMessage = encodeURIComponent(message);
@@ -43,33 +45,33 @@ export default function aedara() {
         }
         return false;
     }
+
     useEffect(() => {
-        if (!resData) {
-            const unsubscribe = useGetDataByConditionWithoutUseEffect(
-                'Aedara',
-                'date',
-                '==',
-                format(new Date(), 'dd-MM-yyyy'),
-                result => {
-                    if (result.length) {
-                        setAedara(result);
-                        setResData(true);
-                    }
-                    else{
-                        let newArray = [];
-                        for (let index = 0; index < Roads.length; index++) {
-                            newArray.push({
-                                ...Roads[index],
-                                dialyOrders: 0,
-                                driverName: '',
-                                twkel: false,
-                            })
-                        }
-                        setAedara(newArray);
-                    }
+        const unsubscribe = useGetDataByConditionWithoutUseEffect(
+            'Aedara',
+            'date',
+            '==',
+            format(new Date(), 'dd-MM-yyyy'),
+            result => {
+                if (result.length) {
+                    setAedaraID(result[0]?.id);
+                    setAedara(result[0]?.aedartAlkhtot);
+                    setResData(true);
                 }
-            );
-        }
+                else {
+                    let newArray = [];
+                    for (let index = 0; index < Roads.length; index++) {
+                        newArray.push({
+                            ...Roads[index],
+                            dialyOrders: 0,
+                            driverName: '',
+                            twkel: false,
+                        })
+                    }
+                    setAedara(newArray);
+                }
+            }
+        );
     }, [Roads]);
     const onValueChange = (index, field, value) => {
         setAedara((prevAedara) => {
@@ -81,26 +83,9 @@ export default function aedara() {
             return updatedArray;
         });
     };
-    const onValueChangeE = (outerIndex, innerIndex, field, value) => {
-        setAedara((prevState) => {
-            const updatedAedara = [...prevState];
-            updatedAedara[outerIndex].aedartAlkhtot[innerIndex] = {
-                ...updatedAedara[outerIndex].aedartAlkhtot[innerIndex],
-                [field]: value,
-            };
-            return updatedAedara;
-        });
-    };
-    const keepOnlyLastIndex = () => {
-        setAedara((prevState) => {
-            const updatedAedara = prevState.slice(-1);
-            return updatedAedara;
-        });
-    };
-
-    const CheckDriverRoads = (driver,road) => {
+    const CheckDriverRoads = (driver, road) => {
         for (let index = 0; index < aedara.length; index++) {
-            if(driver.name === aedara[index].driverName && aedara[index].orderPrice != road.orderPrice){
+            if (driver.name === aedara[index].driverName && aedara[index].orderPrice != road.orderPrice) {
                 return false;
             }
         }
@@ -110,12 +95,22 @@ export default function aedara() {
     console.log(aedara);
     return (
         <div dir='rtl'>
-            <div className='pr-10 pl-10'>
+            <div className='pr-3 pl-3'>
+                <div className="absolute z-50 flex w-full justify-center">
+                    <div
+                        className={`transition-all duration-500 ease-in-out w-1/2 ${showAlert ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+                            }`}
+                    >
+                        <Alert dir="rtl" severity="success">
+                            تم الحفظ بنجاح.
+                        </Alert>
+                    </div>
+                </div>
                 <div className='h-[600px] flex flex-col'>
                     <div className='h-full'>
                         <div className='w-full flex h-full p-5'>
                             <div className='w-full h-full'>
-                                <Card className='mr-5 h-full'>
+                                <Card className='h-full'>
                                     <CardBody>
                                         <div className='w-full flex justify-start p-3 border-b-1 font-extrabold text-xl'>
                                             <div className="mr-2 ml-2">{format(new Date(), 'dd-MM-yyyy')}</div>-<div className="mr-2 ml-2">{format(new Date(), 'EEEE', { locale: ar })}</div>
@@ -134,65 +129,33 @@ export default function aedara() {
                                             </thead>
                                             <tbody>
                                                 {
-                                                    resData ?
-                                                        aedara?.map((road, outerIndex) => {
-                                                            return road?.aedartAlkhtot?.map((road, innerIndex) => {
-                                                                return <tr key={innerIndex} className="border-b border-gray-200 dark:border-gray-700">
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.name}</td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={road?.dialyOrders || ''} onValueChange={(value) => onValueChangeE(outerIndex, innerIndex, 'dialyOrders', value)} color='primary' className="max-w-[150px]" label='' /></div></td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Autocomplete
-                                                                        className="max-w-[150px]"
-                                                                        color="primary"
-                                                                        size="xs"
-                                                                        defaultInputValue={road.driverName}
-                                                                        defaultItems={Drivers}
-                                                                        onSelectionChange={(value) => onValueChangeE(outerIndex, innerIndex, 'driverName', value)}
-                                                                        onInputChange={(value) => onValueChangeE(outerIndex, innerIndex, 'driverName', value)}
-                                                                    >
-                                                                        {
-                                                                            Drivers?.map((driver, index) => (
-                                                                                <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
-                                                                                    {driver?.name}
-                                                                                </AutocompleteItem>
-                                                                            ))
-                                                                        }
-                                                                    </Autocomplete></div></td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Switch isSelected={road.twkel} value={road.twkel} onValueChange={(value) => onValueChangeE(outerIndex, innerIndex, 'twkel', value)}></Switch></td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
-                                                                </tr>
-                                                            })
-                                                        })
-                                                        :
-                                                        aedara?.map((road, index) => {
-                                                            return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.name}</td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={road?.dialyOrders || ''} onValueChange={(value) => onValueChange(index, 'dialyOrders', value)} color='primary' className="max-w-[150px]" label='' /></div></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Autocomplete
-                                                                    className="max-w-[150px]"
-                                                                    color="primary"
-                                                                    size="xs"
-
-                                                                    defaultItems={Drivers}
-                                                                    onSelectionChange={(value) => onValueChange(index, 'driverName', value)}
-                                                                    onInputChange={(value) => onValueChange(index, 'driverName', value)}
-                                                                >
-                                                                    {
-                                                                        Drivers?.map((driver, index) => (
-                                                                            CheckDriverRoads(driver,road) && <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
-                                                                                {driver?.name}
-                                                                            </AutocompleteItem>
-                                                                        ))
-                                                                    }
-                                                                </Autocomplete></div></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Switch isSelected={road.twkel} value={road.twkel} onValueChange={(value) => onValueChange(index, 'twkel', value)}></Switch></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
-                                                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
-                                                            </tr>
-                                                        })
-
+                                                    aedara?.map((road, index) => {
+                                                        return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
+                                                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.name}</td>
+                                                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
+                                                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={road?.dialyOrders || ''} onValueChange={(value) => onValueChange(index, 'dialyOrders', value)} color='primary' className="max-w-[150px]" label='' /></div></td>
+                                                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Autocomplete
+                                                                className="max-w-[150px]"
+                                                                color="primary"
+                                                                size="xs"
+                                                                defaultSelectedKey={road.driverName}
+                                                                defaultItems={Drivers}
+                                                                onSelectionChange={(value) => onValueChange(index, 'driverName', value)}
+                                                                onInputChange={(value) => onValueChange(index, 'driverName', value)}
+                                                            >
+                                                                {
+                                                                    Drivers?.map((driver, index) => (
+                                                                        CheckDriverRoads(driver, road) && <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
+                                                                            {driver?.name}
+                                                                        </AutocompleteItem>
+                                                                    ))
+                                                                }
+                                                            </Autocomplete></div></td>
+                                                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Switch isSelected={road.twkel} value={road.twkel} onValueChange={(value) => onValueChange(index, 'twkel', value)}></Switch></td>
+                                                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
+                                                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
+                                                        </tr>
+                                                    })
                                                 }
                                             </tbody>
                                         </table>
@@ -201,15 +164,14 @@ export default function aedara() {
                             </div>
                         </div>
                     </div>
-                    <div className="mr-10">
+                    <div className="mr-5">
                         <Button isLoading={loading} onClick={async () => {
                             setLoading(true);
                             if (resData) {
-                                await updateDoc(doc(firestore, 'Aedara', aedara[0]?.id), {
-                                    aedartAlkhtot: aedara[0].aedartAlkhtot
+                                await updateDoc(doc(firestore, 'Aedara', aedaraID), {
+                                    aedartAlkhtot: aedara
                                 });
-                                keepOnlyLastIndex();
-
+                                
                             }
                             else {
                                 await addDoc(collection(firestore, 'Aedara'), {
@@ -223,7 +185,11 @@ export default function aedara() {
                                 });
                             }
                             setLoading(false);
-                        }} color='primary' variant="flat">حفظ</Button>
+                            setShowAlert(true);
+                            setTimeout(() => {
+                                setShowAlert(false);
+                            }, 1500);
+                        }} color='primary' variant="flat"><FaSave className="text-xl" />حفظ</Button>
                     </div>
                 </div>
             </div>

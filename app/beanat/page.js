@@ -9,6 +9,8 @@ import AddDriver from "../Modals/AddDriver";
 import GetDocs from "../FireBase/getDocs";
 import AddRoad from "../Modals/AddRoad";
 import AddTajer from "../Modals/AddTajer";
+import { Alert } from "@mui/material";
+import ShowRoads from "../Modals/ShowRoads";
 
 
 export default function beanat() {
@@ -21,17 +23,48 @@ export default function beanat() {
     const Roads = GetDocs('Roads');
     const metadata = GetDocs('metadata');
     const Tojar = GetDocs('Tojar');
-    
-
-
-
+    const [showAlert, setShowAlert] = useState(false);
+    const [showRoads,setShowRoads] = useState(false);
+    const [showType,setShowType] = useState('');
+    const [roadShow,setRoadShow] = useState({});
 
     return (
         <div dir='rtl'>
-            <AddDriver metadata={metadata} Drivers={Drivers} show={showAddDriver} disable={() => setShowAddDriver(false)} />
-            <AddRoad Roads={Roads} metadata={metadata} Drivers={Drivers} show={showAddRoad} disable={() => setShowAddRoad(false)} />
-            <AddTajer Tojar={Tojar} Roads={Roads} metadata={metadata} Drivers={Drivers} show={showAddTajer} disable={() => setShowAddTajer(false)}/>
-            <div className='pr-10 pl-10'>
+            <ShowRoads showMessage={() => {
+                setShowAlert(true);
+                setTimeout(() => {
+                    setShowAlert(false);
+                }, 1500);
+            }} Roads={Roads} Drivers={Drivers} metadata={metadata} road={roadShow} showType={showType} show={showRoads} disable={() => setShowRoads(false)}/>
+            <AddDriver showMessage={() => {
+                setShowAlert(true);
+                setTimeout(() => {
+                    setShowAlert(false);
+                }, 1500);
+            }} metadata={metadata} Drivers={Drivers} show={showAddDriver} disable={() => setShowAddDriver(false)} />
+            <AddRoad showMessage={() => {
+                setShowAlert(true);
+                setTimeout(() => {
+                    setShowAlert(false);
+                }, 1500);
+            }} Roads={Roads} metadata={metadata} Drivers={Drivers} show={showAddRoad} disable={() => setShowAddRoad(false)} />
+            <AddTajer showMessage={() => {
+                setShowAlert(true);
+                setTimeout(() => {
+                    setShowAlert(false);
+                }, 1500);
+            }} Tojar={Tojar} Roads={Roads} metadata={metadata} Drivers={Drivers} show={showAddTajer} disable={() => setShowAddTajer(false)} />
+            <div className='pr-3 pl-3'>
+                <div className="absolute z-50 flex w-full justify-center">
+                    <div
+                        className={`transition-all duration-500 ease-in-out w-1/2 ${showAlert ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+                            }`}
+                    >
+                        <Alert dir="rtl" severity="success">
+                            تم الحفظ بنجاح.
+                        </Alert>
+                    </div>
+                </div>
                 <div className='h-[600px]'>
                     <div className='h-full'>
                         <div className='w-full flex h-full p-5'>
@@ -189,9 +222,9 @@ export default function beanat() {
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.driver}</td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.orderPrice}</td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{123}</td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowModalCreate(true); setTfaolAgla(agla); setMsbarDrag(agla.msbarAgla); setMsbarLkoh(agla.msbarLkoh); }}>دخول</Button></td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowModalCreate(true); setTfaolAgla(agla); setMsbarDrag(agla.msbarAgla); setMsbarLkoh(agla.msbarLkoh); }}>دخول</Button></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road?.towns?.length}</td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowRoads(true);setShowType('البلدان');setRoadShow(road); }}>دخول</Button></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowRoads(true);setShowType('تفصيل');setRoadShow(road); }}>دخول</Button></td>
                                                                 </tr>
                                                             })
                                                         }

@@ -9,7 +9,7 @@ import { IoCloseCircleSharp } from "react-icons/io5";
 import DraggableCells from "../Components/DraggableCells";
 import { Reorder } from "framer-motion";
 
-export default function AddTajer({ show, disable, metadata,Tojar, }) {
+export default function AddTajer({ show, disable, metadata,Tojar,showMessage }) {
 
     const [loading, setLoading] = useState(false);
     const [error,setError] = useState('');
@@ -29,6 +29,7 @@ export default function AddTajer({ show, disable, metadata,Tojar, }) {
         setName('');
         setNumber('');
         disable();
+        showMessage();
     }
 
     const regexNumber = /^(?:(?:(\+?972|\(\+?972\)|\+?\(972\))(?:\s|\.|-)?([1-9]\d?))|(0[23489]{1})|(0[57]{1}[0-9]))(?:\s|\.|-)?([^0\D]{1}\d{2}(?:\s|\.|-)?\d{4})$/;

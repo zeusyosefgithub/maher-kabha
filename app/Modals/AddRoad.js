@@ -9,7 +9,7 @@ import { IoCloseCircleSharp } from "react-icons/io5";
 import DraggableCells from "../Components/DraggableCells";
 import { Reorder } from "framer-motion";
 
-export default function AddRoad({ show, disable, Drivers, metadata,Roads }) {
+export default function AddRoad({ show, disable, Drivers, metadata,Roads,showMessage }) {
 
     const [loading, setLoading] = useState(false);
     const [error,setError] = useState('');
@@ -40,6 +40,7 @@ export default function AddRoad({ show, disable, Drivers, metadata,Roads }) {
         setOrderPrice(0);
         setChoosedPlaces([]);
         disable();
+        showMessage();
     }
 
     const checkRoads = () => {

@@ -2,15 +2,19 @@
 import { Autocomplete, AutocompleteItem, Button, Card, CardBody, Divider, Input } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { FaClipboardList, FaPlus, FaProjectDiagram, FaUserAlt, FaWhatsapp } from "react-icons/fa";
+import { FaClipboardList, FaPlus, FaProjectDiagram, FaSave, FaUserAlt, FaWhatsapp } from "react-icons/fa";
 import { MdReport } from "react-icons/md";
 import { FcManager } from "react-icons/fc";
 import AddDriver from "./Modals/AddDriver";
 import GetDocs from "./FireBase/getDocs";
 import AddRoad from "./Modals/AddRoad";
-import { format } from "date-fns";
+import { format, min } from "date-fns";
 import { ar } from 'date-fns/locale';
 import { useGetDataByConditionWithoutUseEffect } from "./FireBase/getDataByCondition";
+import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
+import { firestore } from "./FireBase/firebase";
+import { Alert, Box, CircularProgress, Typography } from "@mui/material";
+import CircularWithValueLabel from "./Components/ProgressBar";
 export default function Home() {
 
   const [type, setType] = useState('السائقين');
@@ -21,48 +25,64 @@ export default function Home() {
   const Roads = GetDocs('Roads');
   const metadata = GetDocs('metadata');
   const Tojar = GetDocs('Tojar');
-  const [driver, setDriver] = useState(null);
+  const [aedaraID, setAedaraID] = useState('');
   const [aedara, setAedara] = useState([]);
   const [aedaraTojar, setAedaraTojar] = useState([]);
+  const [resData, setResData] = useState(false);
+  const counterAedaraMony = metadata.find((count) => count.id === 'aedaraMony');
+  const [showAlert, setShowAlert] = useState(false);
+
 
   useEffect(() => {
     const unsubscribe = useGetDataByConditionWithoutUseEffect(
-      'Aedara',
+      'AedaraMony',
       'date',
       '==',
       format(new Date(), 'dd-MM-yyyy'),
       result => {
         if (result.length) {
+          setResData(true);
+          setAedaraID(result[0]?.id);
+          setAedara(result[0]?.aedartMoney);
+          setAedaraTojar(result[0]?.aedaraTojar);
+        }
+        else {
+          const unsubscribe = useGetDataByConditionWithoutUseEffect(
+            'Aedara',
+            'date',
+            '==',
+            format(new Date(), 'dd-MM-yyyy'),
+            result => {
+              if (result.length) {
+                let newArray = [];
+                let res = ReduceDrivers(result[0]?.aedartAlkhtot);
+                for (let index = 0; index < res.length; index++) {
+                  newArray.push({
+                    ...res[index],
+                    takedOrders: 0,
+                    sumOrders: 0,
+                    valueOrders: 0
+                  });
+                }
+                setAedara(newArray);
+              }
+            }
+          );
           let newArray = [];
-          let res = ReduceDrivers(result[0]?.aedartAlkhtot);
-          for (let index = 0; index < res.length; index++) {
+          for (let index = 0; index < Tojar.length; index++) {
             newArray.push({
-              ...res[index],
-              takedOrders: 0,
-              sumOrders: 0,
-              valueOrders: 0
+              ...Tojar[index],
+              serialNumber: '',
+              sum: 0
             });
           }
-          console.log(newArray);
-          setAedara(newArray);
+          setAedaraTojar(newArray);
         }
       }
     );
-  }, [Roads]);
+  }, [Roads, Tojar])
 
-  useEffect(() => {
-    let newArray = [];
-    for (let index = 0; index < Tojar.length; index++) {
-      newArray.push({
-        ...Tojar[index],
-        serialNumber: '',
-        sum: 0
-      });
-    }
-    setAedaraTojar(newArray);
-  }, [Tojar]);
 
-  console.log(aedaraTojar);
 
   const ReduceDrivers = (array) => {
     let newArray = [];
@@ -111,8 +131,35 @@ export default function Home() {
     });
   };
 
+  const GetMjmoaDrivers = () => {
+    let orders = 0;
+    let takedOrders = 0;
+    let mjmoaAlthsel = 0;
+    let valueThsel = 0;
+    let driverCost = 0;
+    let delevaryCost = 0;
+    let other = 0;
+    for (let index = 0; index < aedara.length; index++) {
+      orders += parseFloat(aedara[index].dialyOrders);
+      takedOrders += parseFloat(aedara[index].takedOrders);
+      mjmoaAlthsel += parseFloat(aedara[index].sumOrders);
+      valueThsel += parseFloat(aedara[index].valueOrders);
+      driverCost += parseFloat(aedara[index].takedOrders) * parseFloat(aedara[index].orderPrice);
+      delevaryCost += parseFloat(aedara[index]?.valueOrders) - (parseFloat(aedara[index]?.takedOrders) * parseFloat(aedara[index].orderPrice));
+      other += parseFloat(aedara[index]?.sumOrders) - (parseFloat(aedara[index]?.takedOrders) * parseFloat(aedara[index].orderPrice));
+    }
+    return {
+      orders: orders,
+      takedOrders: takedOrders,
+      mjmoaAlthsel: mjmoaAlthsel,
+      valueThsel: valueThsel,
+      driverCost: driverCost,
+      delevaryCost : delevaryCost,
+      other : other
+    }
+  }
 
-  console.log(aedara);
+
   const GetMjmoaAlthsel = () => {
     let sum = 0;
     for (let index = 0; index < aedaraTojar.length; index++) {
@@ -121,19 +168,26 @@ export default function Home() {
     return sum || '';
   }
 
-
-
-
-
-
-
-
+  const calculatePercentage = (totalOrders, suppliedOrders) => {
+    if (totalOrders === 0) return 0; 
+    return (suppliedOrders / totalOrders) * 100;
+};
 
   return (
     <div dir='rtl'>
       <div className='pr-3 pl-3'>
-        <div className='h-[600px]'>
 
+        <div className="absolute z-50 flex w-full justify-center">
+          <div
+            className={`transition-all duration-500 ease-in-out w-1/2 ${showAlert ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+              }`}
+          >
+            <Alert dir="rtl" severity="success">
+              تم الحفظ بنجاح.
+            </Alert>
+          </div>
+        </div>
+        <div className='h-[600px]'>
           <div className='h-full'>
             <div className='w-full flex h-full p-5'>
               <div className='w-full'>
@@ -161,8 +215,8 @@ export default function Home() {
                             aedara?.map((item, index) => {
                               return <tr key={index} className="border-b border-gray-200 dark:border-gray-700 h-">
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.driverName}</td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.dialyOrders}</td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.takedOrders || ''} onValueChange={(value) => { onValueChange(index, 'takedOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><CircularWithValueLabel value={calculatePercentage(parseFloat(item.dialyOrders),parseFloat(item?.takedOrders))} orders={item.dialyOrders}/></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.takedOrders || ''} onValueChange={(value) => { onValueChange(index, 'takedOrders', Math.min(parseFloat(value || 0),parseFloat(item.dialyOrders))); }} color='primary' className="max-w-[100px]" label='' /></div></td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.sumOrders || ''} onValueChange={(value) => { onValueChange(index, 'sumOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.valueOrders || ''} onValueChange={(value) => { onValueChange(index, 'valueOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{(parseFloat(item?.takedOrders) * parseFloat(item.orderPrice)) || ''}</td>
@@ -173,13 +227,13 @@ export default function Home() {
                           }
                           <tr className="border-b border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white">
                             <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">المجموع</td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().orders || ''} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().takedOrders || ''} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().mjmoaAlthsel || ''} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().valueThsel || ''} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().driverCost || ''} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().delevaryCost || ''} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().other || ''} className="max-w-[100px]" /></div></td>
                           </tr>
                         </tbody>
                       </table>
@@ -209,6 +263,7 @@ export default function Home() {
                           </tr>
                         </thead>
                         <tbody>
+
                           {
                             aedaraTojar?.map((item, index) => {
                               return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
@@ -224,12 +279,41 @@ export default function Home() {
                             <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
                           </tr>
                         </tbody>
-                        
+
                       </table>
                     </div>
                   </CardBody>
                 </Card>
               </div>
+            </div>
+            <div className="mr-5">
+              <Button isLoading={loading} onClick={async () => {
+                setLoading(true);
+                if (resData) {
+                  console.log(aedaraID);
+                  await updateDoc(doc(firestore, 'AedaraMony', aedaraID), {
+                    aedartMoney: aedara,
+                    aedaraTojar: aedaraTojar
+                  });
+                }
+                else {
+                  await addDoc(collection(firestore, 'AedaraMony'), {
+                    idnum: counterAedaraMony.count,
+                    date: format(new Date(), 'dd-MM-yyyy'),
+                    time: format(new Date(), 'HH:mm'),
+                    aedartMoney: aedara,
+                    aedaraTojar: aedaraTojar
+                  });
+                  await updateDoc(doc(firestore, 'metadata', 'aedaraMony'), {
+                    count: counterAedaraMony.count + 1
+                  });
+                }
+                setLoading(false);
+                setShowAlert(true);
+                setTimeout(() => {
+                  setShowAlert(false);
+                }, 1500);
+              }} color='primary' variant="flat"><FaSave className="text-xl" />حفظ</Button>
             </div>
           </div>
         </div>

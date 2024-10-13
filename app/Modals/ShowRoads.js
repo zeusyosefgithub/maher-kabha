@@ -9,7 +9,7 @@ import { IoCloseCircleSharp } from "react-icons/io5";
 import DraggableCells from "../Components/DraggableCells";
 import { Reorder } from "framer-motion";
 
-export default function ShowRoads({ show, disable, showType, Drivers, road, metadata,Roads,showMessage }) {
+export default function ShowRoads({ show, disable, Drivers, road, metadata, Roads, showMessage }) {
 
     const [loading, setLoading] = useState(false);
     const [towns, setTowns] = useState([]);
@@ -32,7 +32,6 @@ export default function ShowRoads({ show, disable, showType, Drivers, road, meta
 
     const ResetAll = () => {
         disable();
-        showMessage();
     }
 
     const removeDuplicatesAndNulls = (arr) => {
@@ -62,7 +61,7 @@ export default function ShowRoads({ show, disable, showType, Drivers, road, meta
                 </ModalHeader>
                 <ModalBody className="border-b-2">
                     <div dir='rtl' className=''>
-                        <Tabs defaultSelectedKey={showType} aria-label="Options">
+                        <Tabs aria-label="Options">
                             <Tab key="تفصيل" title="تفصيل">
                                 <Card>
                                     <CardBody>
@@ -96,9 +95,36 @@ export default function ShowRoads({ show, disable, showType, Drivers, road, meta
                                     </CardBody>
                                 </Card>
                             </Tab>
-                            <Tab key="البلدان" title="البلدان">
+                            <Tab key="تعديل" title="تعديل">
                                 <Card>
                                     <CardBody>
+                                        <div className="flex items-center">
+                                            <div>
+                                                <Input size="sm" type='text' value={name} onValueChange={(val) => setName(val)} color='primary' className=' max-w-[350px]' label='اسم الخط' />
+                                                <div className='text-danger text-xs mt-1 text-right'>{errorName}</div>
+                                                <Autocomplete
+                                                    size="sm"
+                                                    label="السائق الشائع"
+                                                    defaultInputValue={driver}
+                                                    className="max-w-[350px] mt-3"
+                                                    color="primary"
+                                                    defaultItems={Drivers}
+                                                    onSelectionChange={setDriver}
+                                                    onInputChange={setDriver}
+                                                >
+                                                    {
+                                                        Drivers?.map((driver, index) => (
+                                                            <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
+                                                                {driver?.name}
+                                                            </AutocompleteItem>
+                                                        ))
+                                                    }
+                                                </Autocomplete>
+                                                <Input size="sm" type='number' value={orderPrice || ''} onValueChange={(val) => setOrderPrice(val)} color='primary' className=' max-w-[350px] mt-3' label='اجرة الطرد' />
+                                                {errorOrderPrice && <div className='text-danger text-xs mt-1 text-right'>{errorOrderPrice}</div>}
+                                                {error && <div className='text-danger text-xs mt-10 text-right'>{error}</div>}
+                                            </div>
+                                        </div>
                                         <div className=" flex items-center pb-3 mb-3 border-b-1">
                                             <div>
                                                 <Autocomplete
@@ -124,7 +150,7 @@ export default function ShowRoads({ show, disable, showType, Drivers, road, meta
                                                 <div className='text-danger text-xs mt-1 text-right'>{errorTowns}</div>
                                             </div>
                                         </div>
-                                        <div className="max-h-[300px] overflow-auto p-3">
+                                        <div className="max-h-[200px] overflow-auto p-3">
                                             {
                                                 towns?.length &&
                                                 <Reorder.Group className="w-full" values={towns} onReorder={setTowns}>
@@ -177,7 +203,7 @@ export default function ShowRoads({ show, disable, showType, Drivers, road, meta
                                 setLoading(false);
                                 return setErrorTowns('لم يتم ادخال البيان المطلوب!');
                             }
-                            if(towns.length > 15){
+                            if (towns.length > 15) {
                                 setLoading(false);
                                 return setErrorTowns('تجاوزت الحد الاقصى لعدد البلاد!');
                             }
@@ -185,17 +211,18 @@ export default function ShowRoads({ show, disable, showType, Drivers, road, meta
                                 setLoading(false);
                                 return setErrorName('تجاوزت الحد الاقصى للاحرف!');
                             }
-                            if(!checkRoads()){
+                            if (!checkRoads()) {
                                 setLoading(false);
                                 return setError('اسم الخط موجود بالفعل!');
                             }
                             await updateDoc(doc(firestore, 'Roads', road.id), {
                                 towns: towns,
-                                name : name,
-                                driver : driver,
-                                orderPrice : orderPrice
+                                name: name,
+                                driver: driver,
+                                orderPrice: orderPrice
                             });
                             setLoading(false);
+                            showMessage();
                         }} color='primary' variant="flat" size="" className='ml-2'>
                             حفظ
                         </Button>

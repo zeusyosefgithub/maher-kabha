@@ -31,7 +31,6 @@ export default function AddDriver({ show, disable, Drivers,metadata,showMessage 
         setName('');
         setNumber('');
         disable();
-        showMessage();
     }
 
     const checkDriverInputs = () => {
@@ -103,6 +102,7 @@ export default function AddDriver({ show, disable, Drivers,metadata,showMessage 
                             })
                             setLoading(false);
                             ResetAll();
+                            showMessage();
                         }} color='success' variant="flat" size="" className='ml-2'>
                             اضافة
                         </Button>

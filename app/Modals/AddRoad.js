@@ -40,7 +40,6 @@ export default function AddRoad({ show, disable, Drivers, metadata,Roads,showMes
         setOrderPrice(0);
         setChoosedPlaces([]);
         disable();
-        showMessage();
     }
 
     const checkRoads = () => {
@@ -193,6 +192,7 @@ export default function AddRoad({ show, disable, Drivers, metadata,Roads,showMes
                             })
                             setLoading(false);
                             ResetAll();
+                            showMessage();
                         }} color='success' variant="flat" size="" className='ml-2'>
                             اضافة
                         </Button>

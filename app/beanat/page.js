@@ -25,7 +25,6 @@ export default function beanat() {
     const Tojar = GetDocs('Tojar');
     const [showAlert, setShowAlert] = useState(false);
     const [showRoads,setShowRoads] = useState(false);
-    const [showType,setShowType] = useState('');
     const [roadShow,setRoadShow] = useState({});
 
     return (
@@ -35,7 +34,7 @@ export default function beanat() {
                 setTimeout(() => {
                     setShowAlert(false);
                 }, 1500);
-            }} Roads={Roads} Drivers={Drivers} metadata={metadata} road={roadShow} showType={showType} show={showRoads} disable={() => setShowRoads(false)}/>
+            }} Roads={Roads} Drivers={Drivers} metadata={metadata} road={roadShow} show={showRoads} disable={() => setShowRoads(false)}/>
             <AddDriver showMessage={() => {
                 setShowAlert(true);
                 setTimeout(() => {
@@ -209,7 +208,6 @@ export default function beanat() {
                                                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">اجرة الطرد</th>
                                                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">معدل الطرود</th>
                                                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">عدد البلدان</th>
-                                                            <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">البلدان</th>
                                                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">تفصيل</th>
                                                         </tr>
                                                     </thead>
@@ -223,8 +221,7 @@ export default function beanat() {
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.orderPrice}</td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road.avgOrders}</td>
                                                                     <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{road?.towns?.length}</td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowRoads(true);setShowType('البلدان');setRoadShow(road); }}>دخول</Button></td>
-                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowRoads(true);setShowType('تفصيل');setRoadShow(road); }}>دخول</Button></td>
+                                                                    <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button color='primary' variant='flat' size="sm" onClick={() => { setShowRoads(true);setRoadShow(road); }}>دخول</Button></td>
                                                                 </tr>
                                                             })
                                                         }

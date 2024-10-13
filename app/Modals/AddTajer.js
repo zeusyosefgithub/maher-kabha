@@ -29,7 +29,6 @@ export default function AddTajer({ show, disable, metadata,Tojar,showMessage }) 
         setName('');
         setNumber('');
         disable();
-        showMessage();
     }
 
     const regexNumber = /^(?:(?:(\+?972|\(\+?972\)|\+?\(972\))(?:\s|\.|-)?([1-9]\d?))|(0[23489]{1})|(0[57]{1}[0-9]))(?:\s|\.|-)?([^0\D]{1}\d{2}(?:\s|\.|-)?\d{4})$/;
@@ -104,6 +103,7 @@ export default function AddTajer({ show, disable, metadata,Tojar,showMessage }) 
                             })
                             setLoading(false);
                             ResetAll();
+                            showMessage();
                         }} color='success' variant="flat" size="" className='ml-2'>
                             اضافة
                         </Button>

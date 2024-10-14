@@ -11,6 +11,8 @@ import AddRoad from "../Modals/AddRoad";
 import AddTajer from "../Modals/AddTajer";
 import { Alert } from "@mui/material";
 import ShowRoads from "../Modals/ShowRoads";
+import { LiaClipboardListSolid } from "react-icons/lia";
+import PropsRoads from "../Modals/PropsRoads";
 
 
 export default function beanat() {
@@ -26,9 +28,11 @@ export default function beanat() {
     const [showAlert, setShowAlert] = useState(false);
     const [showRoads,setShowRoads] = useState(false);
     const [roadShow,setRoadShow] = useState({});
+    const [showPropsRoads,setShowPropsRoads] = useState(false);
 
     return (
         <div dir='rtl'>
+            <PropsRoads show={showPropsRoads} disable={() => setShowPropsRoads(false)}/>
             <ShowRoads showMessage={() => {
                 setShowAlert(true);
                 setTimeout(() => {
@@ -124,10 +128,16 @@ export default function beanat() {
                                                     </Button>
                                                 }
                                                 {
-                                                    type === 'الخطوط' && <Button size="sm" color="primary" variant="flat" onClick={() => setShowAddRoad(true)}>
+                                                    type === 'الخطوط' && <>
+                                                    <Button className="ml-2" size="sm" color="primary" variant="flat" onClick={() => setShowPropsRoads(true)}>
+                                                        <div>تفصيل</div>
+                                                        <LiaClipboardListSolid className="text-xl"/>
+                                                    </Button>
+                                                    <Button size="sm" color="primary" variant="flat" onClick={() => setShowAddRoad(true)}>
                                                         <div>اضافة</div>
                                                         <FaPlus />
                                                     </Button>
+                                                    </>
                                                 }
                                                 {
                                                     type === 'التقارير المالية' && <Button size="sm" color="primary" variant="flat" onClick={() => setShowAddDriver(true)}>

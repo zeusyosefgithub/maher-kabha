@@ -92,7 +92,7 @@ export default function Home() {
         let res = false;
         let orders = parseFloat(array[index].dialyOrders);
         for (let index1 = 0; index1 < array?.length; index1++) {
-          if (array[index].driverName === array[index1].driverName && index !== index1) {
+          if (array[index].driverName && array[index1].driverName && array[index].driverName === array[index1].driverName && index !== index1) {
             res = true;
             orders += parseFloat(array[index1].dialyOrders);
             removed.push(index1);
@@ -173,6 +173,8 @@ export default function Home() {
     return (suppliedOrders / totalOrders) * 100;
 };
 
+console.log(aedara);
+
   return (
     <div dir='rtl'>
       <div className='pr-3 pl-3'>
@@ -213,7 +215,7 @@ export default function Home() {
                         <tbody>
                           {
                             aedara?.map((item, index) => {
-                              return <tr key={index} className="border-b border-gray-200 dark:border-gray-700 h-">
+                              return item.driverName && <tr key={index} className="border-b border-gray-200 dark:border-gray-700 h-">
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.driverName}</td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><CircularWithValueLabel value={calculatePercentage(parseFloat(item.dialyOrders),parseFloat(item?.takedOrders))} orders={item.dialyOrders}/></td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.takedOrders || ''} onValueChange={(value) => { onValueChange(index, 'takedOrders', Math.min(parseFloat(value || 0),parseFloat(item.dialyOrders))); }} color='primary' className="max-w-[100px]" label='' /></div></td>
@@ -238,12 +240,6 @@ export default function Home() {
                         </tbody>
                       </table>
                     </div>
-
-
-
-
-
-
                   </CardBody>
                 </Card>
               </div>

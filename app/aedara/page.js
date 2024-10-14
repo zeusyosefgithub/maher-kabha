@@ -46,6 +46,15 @@ export default function aedara() {
         return false;
     }
 
+    const checkIfInRes = (array,val) => {
+        for (let index = 0; index < array.length; index++) {
+            if(val === array[index].id){
+                return true;
+            }
+        }
+        return false;
+    }
+
     useEffect(() => {
         const unsubscribe = useGetDataByConditionWithoutUseEffect(
             'Aedara',
@@ -54,8 +63,20 @@ export default function aedara() {
             format(new Date(), 'dd-MM-yyyy'),
             result => {
                 if (result.length) {
+                    let newArray = [];
+                    for (let index = 0; index < Roads.length; index++) {
+                        if(!checkIfInRes(result[0]?.aedartAlkhtot,Roads[index].id)){
+                            newArray.push({
+                                ...Roads[index],
+                                dialyOrders: 0,
+                                driverName: '',
+                                twkel: false,
+                            });
+                        }
+                    }
                     setAedaraID(result[0]?.id);
-                    setAedara(result[0]?.aedartAlkhtot);
+                    newArray.push(...result[0]?.aedartAlkhtot);
+                    setAedara(newArray);
                     setResData(true);
                 }
                 else {

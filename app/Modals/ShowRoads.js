@@ -1,5 +1,5 @@
 'use client';
-import { Autocomplete, AutocompleteItem, Avatar, Button, Card, CardBody, Divider, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Radio, RadioGroup, Switch, Tab, Tabs, Tooltip } from "@nextui-org/react";
+import { Accordion, AccordionItem, Autocomplete, AutocompleteItem, Avatar, Button, Card, CardBody, Divider, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Radio, RadioGroup, Spinner, Switch, Tab, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Tabs, Tooltip } from "@nextui-org/react";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import { FaRegCheckSquare } from "react-icons/fa";
@@ -8,6 +8,9 @@ import GetDocs from "../FireBase/getDocs";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import DraggableCells from "../Components/DraggableCells";
 import { Reorder } from "framer-motion";
+import { format, getDaysInMonth } from "date-fns";
+import { arSA } from 'date-fns/locale';
+import { useGetDataByConditionWithoutUseEffect } from "../FireBase/getDataByCondition";
 
 export default function ShowRoads({ show, disable, Drivers, road, metadata, Roads, showMessage }) {
 
@@ -61,123 +64,86 @@ export default function ShowRoads({ show, disable, Drivers, road, metadata, Road
                 </ModalHeader>
                 <ModalBody className="border-b-2">
                     <div dir='rtl' className=''>
-                        <Tabs aria-label="Options">
-                            <Tab key="تفصيل" title="تفصيل">
-                                <Card>
-                                    <CardBody>
-                                        <div className="flex items-center">
-                                            <div>
-                                                <Input size="sm" type='text' value={name} onValueChange={(val) => setName(val)} color='primary' className=' max-w-[350px]' label='اسم الخط' />
-                                                <div className='text-danger text-xs mt-1 text-right'>{errorName}</div>
-                                                <Autocomplete
-                                                    size="sm"
-                                                    label="السائق الشائع"
-                                                    defaultInputValue={driver}
-                                                    className="max-w-[350px] mt-3"
-                                                    color="primary"
-                                                    defaultItems={Drivers}
-                                                    onSelectionChange={setDriver}
-                                                    onInputChange={setDriver}
-                                                >
-                                                    {
-                                                        Drivers?.map((driver, index) => (
-                                                            <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
-                                                                {driver?.name}
-                                                            </AutocompleteItem>
-                                                        ))
-                                                    }
-                                                </Autocomplete>
-                                                <Input size="sm" type='number' value={orderPrice || ''} onValueChange={(val) => setOrderPrice(val)} color='primary' className=' max-w-[350px] mt-3' label='اجرة الطرد' />
-                                                <div className='text-danger text-xs mt-1 text-right'>{errorOrderPrice}</div>
-                                                <div className='text-danger text-xs mt-10 text-right'>{error}</div>
-                                            </div>
-                                        </div>
-                                    </CardBody>
-                                </Card>
-                            </Tab>
-                            <Tab key="تعديل" title="تعديل">
-                                <Card>
-                                    <CardBody>
-                                        <div className="flex items-center">
-                                            <div>
-                                                <Input size="sm" type='text' value={name} onValueChange={(val) => setName(val)} color='primary' className=' max-w-[350px]' label='اسم الخط' />
-                                                <div className='text-danger text-xs mt-1 text-right'>{errorName}</div>
-                                                <Autocomplete
-                                                    size="sm"
-                                                    label="السائق الشائع"
-                                                    defaultInputValue={driver}
-                                                    className="max-w-[350px] mt-3"
-                                                    color="primary"
-                                                    defaultItems={Drivers}
-                                                    onSelectionChange={setDriver}
-                                                    onInputChange={setDriver}
-                                                >
-                                                    {
-                                                        Drivers?.map((driver, index) => (
-                                                            <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
-                                                                {driver?.name}
-                                                            </AutocompleteItem>
-                                                        ))
-                                                    }
-                                                </Autocomplete>
-                                                <Input size="sm" type='number' value={orderPrice || ''} onValueChange={(val) => setOrderPrice(val)} color='primary' className=' max-w-[350px] mt-3' label='اجرة الطرد' />
-                                                {errorOrderPrice && <div className='text-danger text-xs mt-1 text-right'>{errorOrderPrice}</div>}
-                                                {error && <div className='text-danger text-xs mt-10 text-right'>{error}</div>}
-                                            </div>
-                                        </div>
-                                        <div className=" flex items-center pb-3 mb-3 border-b-1">
-                                            <div>
-                                                <Autocomplete
-                                                    size="sm"
-                                                    label="اضافة بلد"
-                                                    className="max-w-[350px] mt-2"
-                                                    color="primary"
-                                                    onSelectionChange={(val) => {
-                                                        let newArray = [];
-                                                        newArray.push(...towns);
-                                                        newArray.push(val);
-                                                        setTowns(removeDuplicatesAndNulls(newArray));
-                                                    }}
-                                                >
-                                                    {
-                                                        places?.places?.map((place, index) => (
-                                                            <AutocompleteItem className='text-right' key={place} value={place}>
-                                                                {place}
-                                                            </AutocompleteItem>
-                                                        ))
-                                                    }
-                                                </Autocomplete>
-                                                <div className='text-danger text-xs mt-1 text-right'>{errorTowns}</div>
-                                            </div>
-                                        </div>
-                                        <div className="max-h-[200px] overflow-auto p-3">
+                        <Card>
+                            <CardBody>
+                                <div className="flex items-center">
+                                    <div>
+                                        <Input size="sm" type='text' value={name} onValueChange={(val) => setName(val)} color='primary' className=' max-w-[350px]' label='اسم الخط' />
+                                        <div className='text-danger text-xs mt-1 text-right'>{errorName}</div>
+                                        <Autocomplete
+                                            size="sm"
+                                            label="السائق الشائع"
+                                            defaultInputValue={driver}
+                                            className="max-w-[350px] mt-3"
+                                            color="primary"
+                                            defaultItems={Drivers}
+                                            onSelectionChange={setDriver}
+                                            onInputChange={setDriver}
+                                        >
                                             {
-                                                towns?.length &&
-                                                <Reorder.Group className="w-full" values={towns} onReorder={setTowns}>
-                                                    {
-                                                        towns?.map((item, index) => (
-                                                            <Reorder.Item className="w-full mt-2 mb-2 cursor-grab" value={item} key={item}>
-                                                                <Card className="w-full">
-                                                                    <CardBody className="w-full">
-                                                                        <div className="w-full flex items-center">
-                                                                            <div className="w-full items-center flex">
-                                                                                <div>{index + 1}.</div>
-                                                                                <div className="mr-2">{item}</div>
-                                                                            </div>
-                                                                            <IoCloseCircleSharp onClick={() => removeItemAtIndex(index)} className="text-xl text-danger cursor-pointer" />
-                                                                        </div>
-                                                                    </CardBody>
-                                                                </Card>
-                                                            </Reorder.Item>
-                                                        ))
-                                                    }
-                                                </Reorder.Group>
+                                                Drivers?.map((driver, index) => (
+                                                    <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
+                                                        {driver?.name}
+                                                    </AutocompleteItem>
+                                                ))
                                             }
-                                        </div>
-                                    </CardBody>
-                                </Card>
-                            </Tab>
-                        </Tabs>
+                                        </Autocomplete>
+                                        <Input size="sm" type='number' value={orderPrice || ''} onValueChange={(val) => setOrderPrice(val)} color='primary' className=' max-w-[350px] mt-3' label='اجرة الطرد' />
+                                        {errorOrderPrice && <div className='text-danger text-xs mt-1 text-right'>{errorOrderPrice}</div>}
+                                        {error && <div className='text-danger text-xs mt-10 text-right'>{error}</div>}
+                                    </div>
+                                </div>
+                                <div className=" flex items-center pb-3 mb-3 border-b-1">
+                                    <div>
+                                        <Autocomplete
+                                            size="sm"
+                                            label="اضافة بلد"
+                                            className="max-w-[350px] mt-2"
+                                            color="primary"
+                                            onSelectionChange={(val) => {
+                                                let newArray = [];
+                                                newArray.push(...towns);
+                                                newArray.push(val);
+                                                setTowns(removeDuplicatesAndNulls(newArray));
+                                            }}
+                                        >
+                                            {
+                                                places?.places?.map((place, index) => (
+                                                    <AutocompleteItem className='text-right' key={place} value={place}>
+                                                        {place}
+                                                    </AutocompleteItem>
+                                                ))
+                                            }
+                                        </Autocomplete>
+                                        <div className='text-danger text-xs mt-1 text-right'>{errorTowns}</div>
+                                    </div>
+                                </div>
+                                <div className="max-h-[200px] overflow-auto p-3">
+                                    {
+                                        towns?.length &&
+                                        <Reorder.Group className="w-full" values={towns} onReorder={setTowns}>
+                                            {
+                                                towns?.map((item, index) => (
+                                                    <Reorder.Item className="w-full mt-2 mb-2 cursor-grab" value={item} key={item}>
+                                                        <Card className="w-full">
+                                                            <CardBody className="w-full">
+                                                                <div className="w-full flex items-center">
+                                                                    <div className="w-full items-center flex">
+                                                                        <div>{index + 1}.</div>
+                                                                        <div className="mr-2">{item}</div>
+                                                                    </div>
+                                                                    <IoCloseCircleSharp onClick={() => removeItemAtIndex(index)} className="text-xl text-danger cursor-pointer" />
+                                                                </div>
+                                                            </CardBody>
+                                                        </Card>
+                                                    </Reorder.Item>
+                                                ))
+                                            }
+                                        </Reorder.Group>
+                                    }
+                                </div>
+                            </CardBody>
+                        </Card>
                     </div>
                 </ModalBody>
                 <ModalFooter>

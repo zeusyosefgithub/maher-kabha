@@ -1,6 +1,6 @@
 'use client';
 import { Accordion, AccordionItem, Autocomplete, AutocompleteItem, Avatar, Button, Card, CardBody, Divider, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Radio, RadioGroup, Spinner, Switch, Tab, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Tabs, Tooltip } from "@nextui-org/react";
-import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import { FaRegCheckSquare } from "react-icons/fa";
 import { firestore } from "../FireBase/firebase";
@@ -147,7 +147,15 @@ export default function ShowRoads({ show, disable, Drivers, road, metadata, Road
                     </div>
                 </ModalBody>
                 <ModalFooter>
-                    <div className="w-full flex justify-end">
+                    <div className="w-full flex items-center">
+                        <div className="flex justify-start items-center w-full">
+                            <Button color="danger" onClick={async() => {
+                                setLoading(true);
+                                await deleteDoc(doc(firestore,'Roads',road.id));
+                                setLoading(false);
+                            }} variant="flat">حذف</Button>
+                        </div>
+                        <div className="flex justify-end items-center w-full">
                         <Button color="warning" variant="flat" size="" onClick={ResetAll}>
                             اغلاق
                         </Button>
@@ -192,6 +200,8 @@ export default function ShowRoads({ show, disable, Drivers, road, metadata, Road
                         }} color='primary' variant="flat" size="" className='ml-2'>
                             حفظ
                         </Button>
+                        </div>
+                        
                     </div>
                 </ModalFooter>
             </ModalContent>

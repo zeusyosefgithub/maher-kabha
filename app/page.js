@@ -32,7 +32,6 @@ export default function Home() {
   const counterAedaraMony = metadata.find((count) => count.id === 'aedaraMony');
   const [showAlert, setShowAlert] = useState(false);
 
-
   useEffect(() => {
     const unsubscribe = useGetDataByConditionWithoutUseEffect(
       'AedaraMony',
@@ -41,10 +40,40 @@ export default function Home() {
       format(new Date(), 'dd-MM-yyyy'),
       result => {
         if (result.length) {
+          let newArray1 = [];
+          let newArray2 = [];
+          const unsubscribe = useGetDataByConditionWithoutUseEffect(
+            'Aedara',
+            'date',
+            '==',
+            format(new Date(), 'dd-MM-yyyy'),
+            result => {
+              if (result.length) {
+                let res = ReduceDrivers(result[0]?.aedartAlkhtot);
+                for (let index = 0; index < res.length; index++) {
+                  newArray1.push({
+                    ...res[index],
+                    takedOrders: 0,
+                    sumOrders: 0,
+                    valueOrders: 0
+                  });
+                }
+              }
+            }
+          );
+          for (let index = 0; index < Tojar.length; index++) {
+            newArray2.push({
+              ...Tojar[index],
+              serialNumber: '',
+              sum: 0
+            });
+          }
           setResData(true);
           setAedaraID(result[0]?.id);
-          setAedara(result[0]?.aedartMoney);
-          setAedaraTojar(result[0]?.aedaraTojar);
+          newArray1.push(...result[0]?.aedartMoney);
+          setAedara(newArray1);
+          newArray2.push(...result[0]?.aedaraTojar);
+          setAedaraTojar(newArray2);
         }
         else {
           const unsubscribe = useGetDataByConditionWithoutUseEffect(
@@ -178,17 +207,22 @@ export default function Home() {
   const checkIfMorThanOneInAedara = (val) => {
     let count = 0;
     for (let index = 0; index < aedara.length; index++) {
-      if(aedara[index].driverName === val.driverName){
+      if (aedara[index].driverName === val.driverName) {
         count++;
-      } 
+      }
     }
-    if(count > 1){
+    if (count > 1) {
       return true;
     }
     return false;
   }
 
-  console.log(aedara);
+  const sendWhatsAppMessage = (phoneNumber, message) => {
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+};
+
 
   return (
     <div dir='rtl'>
@@ -225,8 +259,8 @@ export default function Home() {
                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">مجموع التحصيل</th>
                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">قيمة التوصيل</th>
                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">تكلفة السائق</th>
-                            <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">ربح التوصيل</th>
                             <th className="px-4 py-2 text-center  font-extrabold text-black text-xs">الباقي</th>
+                            <th className="px-4 py-2 text-center  font-extrabold text-black text-xs"></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -239,20 +273,20 @@ export default function Home() {
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input size="sm" type="number" value={item?.sumOrders || ''} onValueChange={(value) => { onValueChange(index, 'sumOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input size="sm" type="number" value={item?.valueOrders || ''} onValueChange={(value) => { onValueChange(index, 'valueOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{(parseFloat(item?.takedOrders) * parseFloat(item.orderPrice)) || ''}</td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{(parseFloat(item?.valueOrders) - (parseFloat(item?.takedOrders) * parseFloat(item.orderPrice)) || '')}</td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{(parseFloat(item?.sumOrders) - (parseFloat(item?.takedOrders) * parseFloat(item.orderPrice))) || ''}</td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><Button onClick={() => sendWhatsAppMessage(`+972${GetDriversInfo(road.driver)?.number}`, '')} color='success' variant='flat' className="" size="sm"><div className="w-full flex items-center">ارسال<FaWhatsapp className="mr-1 text-success text-lg" /></div></Button></td>
                               </tr>
                             })
                           }
-                          <tr className="border-b border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white">
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">المجموع</td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().orders || ''} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().takedOrders || ''} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().mjmoaAlthsel || ''} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().valueThsel || ''} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().driverCost || ''} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().delevaryCost || ''} className="max-w-[100px]" /></div></td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaDrivers().other || ''} className="max-w-[100px]" /></div></td>
+                          <tr className="border-b border-gray-200 dark:border-gray-700 sticky bottom-[-12px] bg-white">
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs font-black">المجموع</td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="w-full flex justify-center"><div className="p-2 bg-success-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaDrivers().orders || <div>&nbsp;</div>}</div></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="w-full flex justify-center"><div className="p-2 bg-success-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaDrivers().takedOrders || <div>&nbsp;</div>}</div></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="w-full flex justify-center"><div className="p-2 bg-success-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaDrivers().mjmoaAlthsel || <div>&nbsp;</div>}</div></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="w-full flex justify-center"><div className="p-2 bg-success-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaDrivers().valueThsel || <div>&nbsp;</div>}</div></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="w-full flex justify-center"><div className="p-2 bg-success-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaDrivers().driverCost || <div>&nbsp;</div>}</div></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="w-full flex justify-center"><div className="p-2 bg-success-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaDrivers().other || <div>&nbsp;</div>}</div></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="w-full flex justify-center"><div className="p-2 bg-warning-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaDrivers().other - GetMjmoaAlthsel() || <div>&nbsp;</div>}</div></div></td>
                           </tr>
                         </tbody>
                       </table>
@@ -286,10 +320,10 @@ export default function Home() {
                               </tr>
                             })
                           }
-                          <tr className="border-b border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white">
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">المجموع</td>
+                          <tr className="border-b border-gray-200 dark:border-gray-700 sticky bottom-[-12px] bg-white">
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs font-black">المجموع</td>
                             <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> </td>
-                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="flex justify-center"><Input color='success' isReadOnly value={GetMjmoaAlthsel()} className="max-w-[100px]" /></div></td>
+                            <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"> <div className="w-full flex justify-center"><div className="p-2 bg-success-100 rounded-lg text-[16px] font-black w-[100px]">{GetMjmoaAlthsel() || <div>&nbsp;</div>}</div></div></td>
                           </tr>
                         </tbody>
 

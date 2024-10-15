@@ -1,5 +1,5 @@
 'use client';
-import { Autocomplete, AutocompleteItem, Button, Card, CardBody, Divider, Input } from "@nextui-org/react";
+import { Autocomplete, AutocompleteItem, Button, Card, CardBody, Divider, Input, Progress } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { FaClipboardList, FaPlus, FaProjectDiagram, FaSave, FaUserAlt, FaWhatsapp } from "react-icons/fa";
@@ -14,7 +14,7 @@ import { useGetDataByConditionWithoutUseEffect } from "./FireBase/getDataByCondi
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import { firestore } from "./FireBase/firebase";
 import { Alert, Box, CircularProgress, Typography } from "@mui/material";
-import CircularWithValueLabel from "./Components/ProgressBar";
+
 export default function Home() {
 
   const [type, setType] = useState('السائقين');
@@ -92,7 +92,7 @@ export default function Home() {
         let res = false;
         let orders = parseFloat(array[index].dialyOrders);
         for (let index1 = 0; index1 < array?.length; index1++) {
-          if (array[index].driverName && array[index1].driverName && array[index].driverName === array[index1].driverName && index !== index1) {
+          if (array[index].driverName && array[index1].driverName && array[index].driverName === array[index1].driverName && index !== index1 && array[index].orderPrice === array[index1].orderPrice) {
             res = true;
             orders += parseFloat(array[index1].dialyOrders);
             removed.push(index1);
@@ -140,13 +140,15 @@ export default function Home() {
     let delevaryCost = 0;
     let other = 0;
     for (let index = 0; index < aedara.length; index++) {
-      orders += parseFloat(aedara[index].dialyOrders);
-      takedOrders += parseFloat(aedara[index].takedOrders);
-      mjmoaAlthsel += parseFloat(aedara[index].sumOrders);
-      valueThsel += parseFloat(aedara[index].valueOrders);
-      driverCost += parseFloat(aedara[index].takedOrders) * parseFloat(aedara[index].orderPrice);
-      delevaryCost += parseFloat(aedara[index]?.valueOrders) - (parseFloat(aedara[index]?.takedOrders) * parseFloat(aedara[index].orderPrice));
-      other += parseFloat(aedara[index]?.sumOrders) - (parseFloat(aedara[index]?.takedOrders) * parseFloat(aedara[index].orderPrice));
+      if (aedara[index].driverName) {
+        orders += parseFloat(aedara[index].dialyOrders);
+        takedOrders += parseFloat(aedara[index].takedOrders);
+        mjmoaAlthsel += parseFloat(aedara[index].sumOrders);
+        valueThsel += parseFloat(aedara[index].valueOrders);
+        driverCost += parseFloat(aedara[index].takedOrders) * parseFloat(aedara[index].orderPrice);
+        delevaryCost += parseFloat(aedara[index]?.valueOrders) - (parseFloat(aedara[index]?.takedOrders) * parseFloat(aedara[index].orderPrice));
+        other += parseFloat(aedara[index]?.sumOrders) - (parseFloat(aedara[index]?.takedOrders) * parseFloat(aedara[index].orderPrice));
+      }
     }
     return {
       orders: orders,
@@ -154,8 +156,8 @@ export default function Home() {
       mjmoaAlthsel: mjmoaAlthsel,
       valueThsel: valueThsel,
       driverCost: driverCost,
-      delevaryCost : delevaryCost,
-      other : other
+      delevaryCost: delevaryCost,
+      other: other
     }
   }
 
@@ -169,11 +171,24 @@ export default function Home() {
   }
 
   const calculatePercentage = (totalOrders, suppliedOrders) => {
-    if (totalOrders === 0) return 0; 
+    if (totalOrders === 0) return 0;
     return (suppliedOrders / totalOrders) * 100;
-};
+  };
 
-console.log(aedara);
+  const checkIfMorThanOneInAedara = (val) => {
+    let count = 0;
+    for (let index = 0; index < aedara.length; index++) {
+      if(aedara[index].driverName === val.driverName){
+        count++;
+      } 
+    }
+    if(count > 1){
+      return true;
+    }
+    return false;
+  }
+
+  console.log(aedara);
 
   return (
     <div dir='rtl'>
@@ -187,8 +202,10 @@ console.log(aedara);
             <Alert dir="rtl" severity="success">
               تم الحفظ بنجاح.
             </Alert>
+
           </div>
         </div>
+
         <div className='h-[600px]'>
           <div className='h-full'>
             <div className='w-full flex h-full p-5'>
@@ -216,11 +233,11 @@ console.log(aedara);
                           {
                             aedara?.map((item, index) => {
                               return item.driverName && <tr key={index} className="border-b border-gray-200 dark:border-gray-700 h-">
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.driverName}</td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><CircularWithValueLabel value={calculatePercentage(parseFloat(item.dialyOrders),parseFloat(item?.takedOrders))} orders={item.dialyOrders}/></td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.takedOrders || ''} onValueChange={(value) => { onValueChange(index, 'takedOrders', Math.min(parseFloat(value || 0),parseFloat(item.dialyOrders))); }} color='primary' className="max-w-[100px]" label='' /></div></td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.sumOrders || ''} onValueChange={(value) => { onValueChange(index, 'sumOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.valueOrders || ''} onValueChange={(value) => { onValueChange(index, 'valueOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{checkIfMorThanOneInAedara(item) ? `${item.driverName} (${item.name})` : item.driverName}</td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.dialyOrders}<Progress aria-label="Loading..." value={calculatePercentage(parseFloat(item.dialyOrders), parseFloat(item?.takedOrders))} className="max-w-md" /></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input size="sm" type="number" value={item?.takedOrders || ''} onValueChange={(value) => { onValueChange(index, 'takedOrders', Math.min(parseFloat(value || 0), parseFloat(item.dialyOrders))); }} color='primary' className="max-w-[100px]" label='' /></div></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input size="sm" type="number" value={item?.sumOrders || ''} onValueChange={(value) => { onValueChange(index, 'sumOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input size="sm" type="number" value={item?.valueOrders || ''} onValueChange={(value) => { onValueChange(index, 'valueOrders', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{(parseFloat(item?.takedOrders) * parseFloat(item.orderPrice)) || ''}</td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{(parseFloat(item?.valueOrders) - (parseFloat(item?.takedOrders) * parseFloat(item.orderPrice)) || '')}</td>
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{(parseFloat(item?.sumOrders) - (parseFloat(item?.takedOrders) * parseFloat(item.orderPrice))) || ''}</td>
@@ -264,8 +281,8 @@ console.log(aedara);
                             aedaraTojar?.map((item, index) => {
                               return <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
                                 <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs">{item.name}</td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.serialNumber || ''} onValueChange={(value) => { onValueChangeTojar(index, 'serialNumber', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
-                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input type="number" value={item?.sum || ''} onValueChange={(value) => { onValueChangeTojar(index, 'sum', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input size="sm" type="number" value={item?.serialNumber || ''} onValueChange={(value) => { onValueChangeTojar(index, 'serialNumber', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
+                                <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300 text-xs"><div className="flex justify-center"><Input size="sm" type="number" value={item?.sum || ''} onValueChange={(value) => { onValueChangeTojar(index, 'sum', value); }} color='primary' className="max-w-[100px]" label='' /></div></td>
                               </tr>
                             })
                           }

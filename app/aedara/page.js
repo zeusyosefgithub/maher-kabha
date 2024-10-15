@@ -104,14 +104,6 @@ export default function aedara() {
             return updatedArray;
         });
     };
-    const CheckDriverRoads = (driver, road) => {
-        for (let index = 0; index < aedara.length; index++) {
-            if (driver.name === aedara[index].driverName && aedara[index].orderPrice != road.orderPrice) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     console.log(aedara);
     return (
@@ -166,7 +158,7 @@ export default function aedara() {
                                                             >
                                                                 {
                                                                     Drivers?.map((driver, index) => (
-                                                                        CheckDriverRoads(driver, road) && <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
+                                                                        <AutocompleteItem className='text-right' key={driver?.name} value={driver?.name}>
                                                                             {driver?.name}
                                                                         </AutocompleteItem>
                                                                     ))

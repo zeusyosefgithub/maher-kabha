@@ -114,8 +114,7 @@ export default function PropsRoads({ show, disable }) {
                                                                                             <TableColumn>اسم الخط</TableColumn>
                                                                                             <TableColumn>اسم السائق</TableColumn>
                                                                                             <TableColumn>عدد الطرود</TableColumn>
-                                                                                            <TableColumn>سعر الطرد</TableColumn>
-                                                                                            <TableColumn>توكيل الطرد</TableColumn>
+                                                                                            <TableColumn>التحصيل الكلي</TableColumn>
                                                                                         </TableHeader>
                                                                                         <TableBody>
                                                                                             {
@@ -124,8 +123,7 @@ export default function PropsRoads({ show, disable }) {
                                                                                                         <TableCell>{khat?.name}</TableCell>
                                                                                                         <TableCell>{khat?.driverName}</TableCell>
                                                                                                         <TableCell>{khat?.dialyOrders}</TableCell>
-                                                                                                        <TableCell>{khat?.orderPrice}</TableCell>
-                                                                                                        <TableCell>{khat?.twkel ? 'نعم' : 'لا'}</TableCell>
+                                                                                                        <TableCell>{khat?.sumOrders}</TableCell>
                                                                                                     </TableRow>
                                                                                                 })
                                                                                             }
